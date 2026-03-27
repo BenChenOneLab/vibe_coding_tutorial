@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 新手指南 — PM Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf8;
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --accent: #d97706;
+    --accent-soft: #fffbeb;
+    --border: #e0ddd8;
+    --card: #ffffff;
+    --code-bg: #1e1e1e;
+    --code-text: #d4d4d4;
+    --green: #2d8a56;
+    --green-soft: #ecfdf5;
+    --blue: #2563eb;
+    --blue-soft: #eff6ff;
+    --purple: #7c3aed;
+    --purple-soft: #f5f3ff;
+    --grid-hover: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 19px;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── SLIDE SYSTEM ── */
+  .slide {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    padding: 2rem 2rem 4.5rem;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .slide-inner {
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ── NAV BAR ── */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(250,250,248,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 0.6rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-dots { display: flex; gap: 6px; align-items: center; }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); border: none; cursor: pointer;
+    transition: all 0.25s; padding: 0;
+  }
+  .nav-dot.active { background: var(--accent); width: 22px; border-radius: 4px; }
+  .nav-btn {
+    background: none; border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 0.35rem 1rem; font-family: inherit; font-size: 0.82rem;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn:disabled:hover { border-color: var(--border); color: var(--muted); }
+  .page-num { font-size: 0.75rem; color: var(--muted); min-width: 40px; text-align: center; }
+
+  /* ── TYPOGRAPHY ── */
+  h1 { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.3; margin-bottom: 1rem; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1rem; }
+  h2 .tn {
+    font-size: 0.8rem; font-weight: 500; color: var(--accent);
+    border: 1.5px solid var(--accent); border-radius: 4px;
+    padding: 0.1em 0.5em; margin-right: 0.5em;
+    vertical-align: middle; position: relative; top: -1px;
+  }
+  h3 { font-size: 1.15rem; font-weight: 700; margin: 1.4rem 0 0.5rem; }
+  p { margin-bottom: 0.8rem; }
+  .muted { color: var(--muted); font-size: 1rem; }
+  .subtitle { font-size: 1.1rem; color: var(--muted); font-weight: 300; margin-bottom: 1.5rem; }
+  code {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+    background: #f0eeea; padding: 0.12em 0.4em; border-radius: 4px;
+  }
+
+  /* ── COMPONENTS ── */
+  .callout {
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+    margin: 1rem 0; font-size: 1rem;
+  }
+  .callout strong { color: var(--accent); }
+  .callout-g { background: var(--green-soft); border-left-color: var(--green); }
+  .callout-g strong { color: var(--green); }
+  .callout-b { background: var(--blue-soft); border-left-color: var(--blue); }
+  .callout-b strong { color: var(--blue); }
+  .callout-p { background: var(--purple-soft); border-left-color: var(--purple); }
+  .callout-p strong { color: var(--purple); }
+
+  .step-card { display: flex; gap: 0.8rem; align-items: flex-start; margin: 0.8rem 0; }
+  .sn {
+    flex-shrink: 0; width: 30px; height: 30px;
+    background: var(--accent); color: #fff; font-size: 0.88rem; font-weight: 700;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+  .sc { flex: 1; }
+  .sc p:last-child { margin-bottom: 0; }
+
+  .flow {
+    display: flex; align-items: center; gap: 0; margin: 1.2rem 0;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .flow-s {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 0.55rem 0.9rem; font-size: 0.92rem; font-weight: 500; text-align: center;
+  }
+  .flow-a { color: var(--muted); font-size: 1.1rem; padding: 0 0.2rem; }
+  .flow-s.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; cursor: pointer; position: relative; }
+  .flow-s.on:hover { background: #fef3c7; transform: translateY(-1px); transition: all 0.15s; }
+
+  /* skill tooltip */
+  .skill-tip {
+    display: none; position: absolute; left: 50%; top: calc(100% + 10px);
+    transform: translateX(-50%); z-index: 100;
+    background: var(--code-bg); color: var(--code-text); border-radius: 8px;
+    padding: 0.7rem 0.9rem; font-size: 0.82rem; line-height: 1.6;
+    width: 300px; text-align: left; font-weight: 400;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    pointer-events: none;
+  }
+  .skill-tip::before {
+    content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-bottom: 6px solid var(--code-bg);
+  }
+  .skill-tip .tip-name { color: #fbbf24; font-weight: 600; margin-bottom: 0.3rem; }
+  .flow-s.on.active .skill-tip { display: block; }
+
+  .prompt-box {
+    background: #fffbeb; border: 1.5px solid #fbbf24; border-radius: 8px;
+    padding: 1rem 1.2rem; margin: 0.8rem 0; font-size: 0.95rem; line-height: 1.8;
+  }
+  .pl { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 0.4rem; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 0.8rem 0; }
+
+  /* ── COPY ── */
+  .cw { position: relative; }
+  .cb {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: #aaa; font-size: 0.82rem; padding: 0.3rem 0.7rem; border-radius: 4px;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .cb:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .cb.ok { color: #4ade80; border-color: #4ade80; }
+
+  .rb {
+    background: var(--code-bg); color: var(--code-text); border-radius: 8px;
+    padding: 1.2rem 1.4rem; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; line-height: 1.85; white-space: pre-wrap;
+    word-break: break-word; overflow-y: auto; max-height: 55vh; margin: 0.8rem 0;
+  }
+
+  /* ── LAYER DIAGRAM ── */
+  .layer-stack { display: flex; flex-direction: column; gap: 6px; margin: 1rem 0; }
+  .layer {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.95rem;
+  }
+  .layer-icon { font-size: 1.3rem; flex-shrink: 0; width: 32px; text-align: center; }
+  .layer-1 { background: #fef3c7; border: 1.5px solid #f59e0b; }
+  .layer-2 { background: #dbeafe; border: 1.5px solid #3b82f6; }
+  .layer-3 { background: #ede9fe; border: 1.5px solid #8b5cf6; }
+
+  /* ── SOLUTION CARDS ── */
+  .sol { background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 0.6rem 0; transition: border-color 0.2s; }
+  .sol:hover { border-color: var(--accent); }
+  .sol-l { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+  .sol p { font-size: 1rem; margin-bottom: 0; }
+
+  /* ── ACCORDION CASE CARDS ── */
+  .case { background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; margin: 0.6rem 0; transition: border-color 0.2s, box-shadow 0.2s; overflow: hidden; }
+  .case:hover { border-color: var(--accent); }
+  .case.bad { border-left: 3px solid #ef4444; }
+  .case-head { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.8rem 1.2rem; cursor: pointer; user-select: none; }
+  .case-head:hover { background: var(--accent-soft); }
+  .case-arrow { flex-shrink: 0; width: 20px; height: 20px; margin-top: 0.15rem; transition: transform 0.25s ease; color: var(--muted); }
+  .case.open .case-arrow { transform: rotate(90deg); }
+  .case-summary { flex: 1; }
+  .case-summary .sol-l { margin-bottom: 0.15rem; }
+  .case-summary p { font-size: 0.95rem; color: var(--muted); margin: 0; }
+  .case-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+  .case.open .case-body { max-height: 600px; }
+  .case-detail { padding: 0 1.2rem 1rem 3rem; font-size: 0.9rem; line-height: 1.7; border-top: 1px solid var(--border); }
+  .case-detail .ex-label { font-weight: 700; color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.6rem; display: block; }
+  .case.bad .case-detail .ex-label { color: #ef4444; }
+  .case-detail code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; background: #f3f3f0; padding: 0.1em 0.4em; border-radius: 3px; }
+  .case-detail .ex-block { background: #f9f9f6; border-radius: 6px; padding: 0.6rem 0.8rem; margin: 0.4rem 0 0.2rem; font-size: 0.85rem; line-height: 1.6; }
+
+  /* ── FEATURE TABLE ── */
+  .ftable { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+  .ftable th {
+    text-align: left; padding: 0.6rem 0.8rem; border-bottom: 2px solid var(--accent);
+    font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent);
+  }
+  .ftable td { padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--border); }
+  .ftable tr:last-child td { border-bottom: none; }
+  .ftable .ft-name { font-weight: 700; white-space: nowrap; }
+  .ftable .ft-code { font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: var(--accent); }
+
+  /* ── INSIGHT STAGES ── */
+  .stages { display: flex; flex-direction: column; gap: 4px; margin: 1rem 0; }
+  .stage {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.5rem 0.8rem; border-radius: 6px; font-size: 0.92rem;
+    background: var(--card); border: 1px solid var(--border);
+  }
+  .stage-n {
+    flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage-arrow { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 0 0 0 0.5rem; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.8rem; }
+    .slide { padding: 1.5rem 1.2rem 4.5rem; }
+    .rb { font-size: 0.78rem; max-height: 45vh; }
+    .ftable { font-size: 0.85rem; }
+    .ftable td, .ftable th { padding: 0.4rem 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 0: 簡介 + 安裝 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide active" data-page="0">
+<div class="slide-inner">
+  <h1>Claude Code<br><span>AI 寫程式，你出想法</span></h1>
+  <p class="subtitle">Anthropic 官方的 CLI 工具。在終端機裡跟 AI 對話，它幫你寫 code、改 bug、讀文件、跑指令。<br>不會寫程式也能用——用自然語言描述你要什麼就好。</p>
+
+  <h3>三步安裝</h3>
+  <div class="step-card"><div class="sn">1</div><div class="sc">
+    <p><strong>裝 Node.js</strong><br>到 <a href="https://nodejs.org" target="_blank" style="color:var(--blue);">nodejs.org</a> 下載 LTS 版本安裝（需要 18+）。已經有的跳過。</p>
+  </div></div>
+  <div class="step-card"><div class="sn">2</div><div class="sc">
+    <p><strong>安裝 Claude Code</strong></p>
+    <div class="cw"><div class="rb" style="margin:0.4rem 0; padding:0.6rem 1rem;">npm install -g @anthropic-ai/claude-code</div><button class="cb" onclick="navigator.clipboard.writeText('npm install -g @anthropic-ai/claude-code').then(()=>{this.textContent='✓';this.classList.add('ok');setTimeout(()=>{this.textContent='Copy';this.classList.remove('ok')},1500)})">Copy</button></div>
+  </div></div>
+  <div class="step-card"><div class="sn">3</div><div class="sc">
+    <p><strong>開始用</strong><br>打開終端機，<code>cd</code> 到你的專案資料夾，輸入 <code>claude</code>，登入後就能開始對話。</p>
+  </div></div>
+
+  <h3>第一次可以試什麼？</h3>
+  <div class="card" style="font-size:0.95rem;">
+    <p style="margin-bottom:0.3rem;"><code>幫我看一下這個專案的架構</code> — 讓 AI 幫你讀 code</p>
+    <p style="margin-bottom:0.3rem;"><code>這段報錯了，幫我修</code> + 貼上錯誤訊息 — debug</p>
+    <p style="margin-bottom:0.3rem;"><code>@spec.md 根據這份規格幫我做一個表單</code> — 引用檔案給 context</p>
+    <p style="margin-bottom:0;"><code>/plan 我想加一個用戶通知系統</code> — 先規劃再執行</p>
+  </div>
+
+  <div class="callout callout-g">
+    <strong>跟 ChatGPT 最大的差別：</strong>Claude Code 直接活在你的專案裡，能讀檔、改檔、跑指令。不用複製貼上程式碼，它直接幫你改。
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 1: CLAUDE.md 記憶系統 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-page="1">
+<div class="slide-inner">
+  <h2><span class="tn">01</span>CLAUDE.md — 你的 AI 記憶</h2>
+  <p>Claude Code 每次對話都是全新的。CLAUDE.md 就是讓它「記住你」的方式。<br>在專案根目錄建一個 <code>CLAUDE.md</code>，寫下你的偏好和規則，AI 每次啟動都會讀。</p>
+
+  <h3>三層結構，由廣到細</h3>
+  <div class="layer-stack">
+    <div class="layer layer-1">
+      <div class="layer-icon">&#127758;</div>
+      <div><strong>Global</strong> — <code>~/.claude/CLAUDE.md</code><br><span class="muted">你的個人偏好，所有專案都吃得到</span></div>
+    </div>
+    <div class="layer layer-2">
+      <div class="layer-icon">&#128193;</div>
+      <div><strong>Project</strong> — <code>專案根目錄/CLAUDE.md</code><br><span class="muted">專案架構、技術棧、團隊約定</span></div>
+    </div>
+    <div class="layer layer-3">
+      <div class="layer-icon">&#128196;</div>
+      <div><strong>子目錄</strong> — <code>任何子資料夾/CLAUDE.md</code><br><span class="muted">特定模組的細部規則（可選）</span></div>
+    </div>
+  </div>
+
+  <h3>最小可用範例</h3>
+  <div class="cw"><div class="rb" style="margin:0.4rem 0; font-size:0.82rem; line-height:1.8;"># 語言
+回覆用繁體中文，code 和 commit message 用英文
+
+# 風格
+Be terse. 不要囉唆
+不要加我沒要求的功能
+
+# 規則
+改 code 前先讀完整個檔案
+fix 失敗 2 次就換方向，不要微調</div><button class="cb" onclick="navigator.clipboard.writeText('# 語言\n回覆用繁體中文，code 和 commit message 用英文\n\n# 風格\nBe terse. 不要囉唆\n不要加我沒要求的功能\n\n# 規則\n改 code 前先讀完整個檔案\nfix 失敗 2 次就換方向，不要微調').then(()=>{this.textContent='✓';this.classList.add('ok');setTimeout(()=>{this.textContent='Copy';this.classList.remove('ok')},1500)})">Copy</button></div>
+
+  <h3>用了一陣子之後</h3>
+  <div class="card" style="font-size:0.95rem;">
+    <p style="margin-bottom:0.4rem;"><strong><code>.claude/rules/</code></strong> — 拆出來的硬規則，可限定「碰到哪些檔案才生效」，不浪費 context</p>
+    <p style="margin-bottom:0.4rem;"><strong><code>.claude/memory/</code></strong> — Claude 自己累積的知識筆記，按需讀取不佔空間</p>
+    <p style="margin-bottom:0;"><strong><code>/insights</code></strong> — 跑一次健檢報告，它會自動建議你該加哪些規則，複製貼上就好</p>
+  </div>
+
+  <div class="callout">
+    <strong>不用一次寫完。</strong>先貼上面的範例，用幾天後覺得 AI 哪裡不順，就加一條規則。踩一次坑補一條，越用越順。
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 2: Prompt 實戰技巧 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-page="2">
+<div class="slide-inner">
+  <h2><span class="tn">02</span>Prompt 實戰技巧</h2>
+  <p>跟 Claude Code 溝通，<strong>給 context 比給指令重要</strong>。</p>
+
+  <h3>四個必學操作</h3>
+  <div class="step-card"><div class="sn">1</div><div class="sc">
+    <p><strong><code>@file</code> 引用檔案</strong><br>直接 <code>@spec.md</code> 把規格丟進去，不用複製貼上。可以一次引用多個檔案。</p>
+  </div></div>
+  <div class="step-card"><div class="sn">2</div><div class="sc">
+    <p><strong><code>/plan</code> 先規劃再執行</strong><br>PM 最該用的功能。讓 AI 先列計畫給你看，你同意了才動手。避免它自作主張改錯方向。</p>
+  </div></div>
+  <div class="step-card"><div class="sn">3</div><div class="sc">
+    <p><strong>迭代心法：三方案 → 挑一個 → 逐步加</strong><br>先要求三個方案討論，挑最簡單的做出來，能用了再加功能。</p>
+  </div></div>
+  <div class="step-card"><div class="sn">4</div><div class="sc">
+    <p><strong>錯誤處理：整段貼，不用看懂</strong><br>跑出錯誤訊息？全選、複製、貼給它，說「這段報錯了，幫我修」。反覆修超過 3 次就說「換個做法重寫」。</p>
+  </div></div>
+
+  <h3>範例 Prompt</h3>
+  <div class="prompt-box">
+    <div class="pl">好的 prompt 長這樣</div>
+    我是體育博弈產品的 PM。<br>
+    @betting-spec-template.md 這是我們目前的規格模板<br>
+    @settlement-rules.csv 這是現有的結算規則表<br><br>
+    幫我做一個 checklist 工具：選球種後自動帶出該球種的必填項目，逐項勾選確認，缺漏標紅。<br>
+    先給我三個方案討論，不要直接寫 code。
+  </div>
+
+  <div class="callout callout-g">
+    <strong>心法：</strong>想像你在跟一個超強但剛入職的外包說話——它什麼都會做，但不知道你們公司的 context。你給越多背景，它做越準。
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 3: 真實案例 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-page="3">
+<div class="slide-inner">
+  <h2><span class="tn">03</span>真實案例：Frog AI</h2>
+  <p>一個用 Claude Code 從零開發的 AI 穿搭內容生產系統。</p>
+
+  <div class="case" style="margin-top:1rem;" onclick="this.classList.toggle('open')">
+    <div class="case-head">
+      <svg class="case-arrow" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
+      <div class="case-summary">
+        <div class="sol-l">CLAUDE.md 是踩坑踩出來的</div>
+        <p>80 行規則不是一天寫的，每條背後都是一個真實的坑。</p>
+      </div>
+    </div>
+    <div class="case-body"><div class="case-detail">
+      <div class="ex-block">
+        <strong>第 1 週</strong>：基本規則（語言偏好、使用習慣）<br>
+        <strong>第 2 週</strong>：AI 亂猜 bug 原因 → 加「先讀 code 再診斷，不准用猜的」<br>
+        <strong>第 3 週</strong>：AI 說「完成了」但根本沒測 → 加「寫完必須用工具驗證，禁止腦內推演」<br>
+        <strong>第 4 週</strong>：怕 WebFetch 撈到惡意指令 → 加 Prompt Injection 偵測提醒<br><br>
+        <strong style="color:#ef4444;">踩坑實例</strong>：Recharts tooltip 位置跑掉，AI 用 CSS micro-tweak 修了 5 輪都沒用。最後我叫它換策略用內建 <code>content</code> prop，一次就好。從此加規則：<strong>fix 失敗 2 次就必須換方向</strong>。
+      </div>
+    </div></div>
+  </div>
+
+  <div class="case" onclick="this.classList.toggle('open')">
+    <div class="case-head">
+      <svg class="case-arrow" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
+      <div class="case-summary">
+        <div class="sol-l">Skills + Memory：讓 AI 有專長和記憶</div>
+        <p>Skills 給專業能力，Memory 讓 AI 跨 session 記住專案脈絡和已知坑。</p>
+      </div>
+    </div>
+    <div class="case-body"><div class="case-detail">
+      <span class="ex-label">Skills — 需要什麼裝什麼</span>
+      <div class="ex-block">
+        <code>frontend-design</code>（UI 設計感）、<code>ui-ux-pro-max</code>（視覺打磨）、<code>ltx-prompt</code> / <code>wan-prompt</code>（影片 prompt 優化）— 共 4 個，每個都對應實際工作流。
+      </div>
+      <span class="ex-label">Memory — 跨 session 的大腦</span>
+      <div class="ex-block">
+        <code>MEMORY.md</code> 索引 + 7 個子檔案（已知坑、架構、執行流程、被糾正的記錄⋯）按需讀取，不浪費 context。<br>
+        還有 Checkpoint Protocol：完成功能 → commit → review → retro → backup，一氣呵成。
+      </div>
+    </div></div>
+  </div>
+
+  <div class="case" onclick="this.classList.toggle('open')">
+    <div class="case-head">
+      <svg class="case-arrow" viewBox="0 0 20 20" fill="currentColor"><path d="M7.3 4.3a1 1 0 011.4 0l5 5a1 1 0 010 1.4l-5 5a1 1 0 01-1.4-1.4L11.58 10 7.3 5.7a1 1 0 010-1.4z"/></svg>
+      <div class="case-summary">
+        <div class="sol-l">Review & Retro ≠ Git Commit Log</div>
+        <p>Commit log 記「改了什麼」，Retro 記「為什麼這樣做」和「學到什麼」。</p>
+      </div>
+    </div>
+    <div class="case-body"><div class="case-detail">
+      <div class="ex-block">
+        <strong>Git log</strong>：<code>fix(tick-queue): stop infinite retry loop when ComfyUI is offline</code><br><br>
+        <strong>RETRO.md</strong>：「autoTagger 原本用 SDK 需要 API key，.env 沒設導致 53 篇全 untagged。改用 <code>claude -p</code> CLI 零配置。Trade-off 是每次 spawn process 比較重，加 200ms delay 就夠。」<br><br>
+        一個月 50+ 版本 RETRO 紀錄，按主題分類歸檔，commit 進 Git 就是<strong>團隊知識庫</strong>。
+      </div>
+    </div></div>
+  </div>
+
+  <div class="callout callout-g">
+    <strong>核心心法：</strong>把跟 AI 協作當成帶新人——CLAUDE.md 是 onboarding 文件，Memory 是工作筆記，Retro 是經驗傳承。踩一次坑就補一條，越用越順。
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 5: Skills -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-page="4">
+<div class="slide-inner">
+  <h2><span class="tn">04</span>Skills：可重複使用的能力包</h2>
+  <p>把常做的工作流變成一鍵指令，像是幫 AI 裝外掛。</p>
+
+  <h3>內建 Skills <span style="font-size:0.75rem; font-weight:400; color:var(--muted);">（點擊查看說明）</span></h3>
+  <div class="flow" style="flex-wrap:wrap; gap:0.4rem 0;">
+    <div class="flow-s on" onclick="toggleTip(this)">/commit
+      <div class="skill-tip"><div class="tip-name">/commit</div>分析 staged changes，自動產生符合 conventional commits 格式的 commit message。</div>
+    </div>
+    <div class="flow-a">&bull;</div>
+    <div class="flow-s on" onclick="toggleTip(this)">/review-pr
+      <div class="skill-tip"><div class="tip-name">/review-pr</div>Review 當前分支的 PR，分析 diff、留 review comments，找 bug 和改進點。</div>
+    </div>
+    <div class="flow-a">&bull;</div>
+    <div class="flow-s on" onclick="toggleTip(this)">/plan
+      <div class="skill-tip"><div class="tip-name">/plan</div>進入 Plan Mode，Claude 只做調研和規劃，列出方案等你核准後才動手改 code。PM 必用。</div>
+    </div>
+    <div class="flow-a">&bull;</div>
+    <div class="flow-s on" onclick="toggleTip(this)">/insights
+      <div class="skill-tip"><div class="tip-name">/insights</div>分析過去 30 天的 session 紀錄，產出互動式 HTML 健檢報告，找出使用模式和改進建議。</div>
+    </div>
+    <div class="flow-a">&bull;</div>
+    <div class="flow-s on" onclick="toggleTip(this)">/batch
+      <div class="skill-tip"><div class="tip-name">/batch &lt;instruction&gt;</div>大規模重構利器。拆分任務成 5~30 個獨立單元，每個跑在獨立 worktree，平行執行後各自開 PR。</div>
+    </div>
+    <div class="flow-a">&bull;</div>
+    <div class="flow-s on" onclick="toggleTip(this)">/simplify
+      <div class="skill-tip"><div class="tip-name">/simplify [focus]</div>平行跑 3 個 review agent 檢查你改過的檔案，找出可重用、品質和效能問題後自動修復。</div>
+    </div>
+  </div>
+
+  <h3>自訂 Skill — 三步驟變成 / 指令</h3>
+  <div class="step-card"><div class="sn">1</div><div class="sc">
+    <p><strong>建目錄</strong><br><code>mkdir -p .claude/skills/write-prd</code></p>
+  </div></div>
+  <div class="step-card"><div class="sn">2</div><div class="sc">
+    <p><strong>寫 SKILL.md</strong>（YAML frontmatter + 指令內容）</p>
+    <div style="background:var(--code-bg); color:var(--code-text); border-radius:6px; padding:0.6rem 0.8rem; margin-top:0.4rem; font-family:'JetBrains Mono',monospace; font-size:0.75rem; line-height:1.7; white-space:pre;">---
+name: write-prd
+description: 用團隊模板撰寫 PRD
+allowed-tools:
+  - Read
+  - Write
+  - WebFetch
+---
+依照 @prd-template.md 格式，
+產出完整 PRD，包含目標、用戶故事、
+驗收標準。$ARGUMENTS 是需求描述。</div>
+    <p class="muted" style="margin-top:0.3rem;"><code>name</code> = slash command 名稱，<code>description</code> = Claude 自動判斷何時載入的依據，<code>$ARGUMENTS</code> = 使用者傳入的參數</p>
+  </div></div>
+  <div class="step-card"><div class="sn">3</div><div class="sc">
+    <p><strong>使用</strong><br>打 <code>/write-prd 新增用戶積分系統</code> 即可觸發，或 Claude 判斷相關時自動載入。</p>
+  </div></div>
+
+  <div class="callout" style="margin-top:0.6rem;">
+    <strong>進階控制：</strong><code>disable-model-invocation: true</code> = 只有手動 <code>/name</code> 才觸發（適合 deploy 等高風險操作）。<code>context: fork</code> = 在獨立 subagent 執行，不污染主對話。
+  </div>
+
+  <h3>Skills 生態系</h3>
+  <div class="card">
+    <p style="margin-bottom:0.5rem;"><strong><a href="https://github.com/deanpeters/Product-Manager-Skills" target="_blank" style="color:var(--blue); text-decoration:underline;">Product Manager Skills</a></strong> — 46 個現成的 PM skill，涵蓋 PRD 撰寫、用戶訪談分析、優先級排序、Sprint Planning 等。</p>
+    <p style="margin-bottom:0.5rem;"><strong><a href="https://skillsmp.com/" target="_blank" style="color:var(--blue); text-decoration:underline;">SkillsMP</a></strong> — Agent Skills 市集，支援 Claude Code / Codex / Cursor 等多平台。<a href="https://github.com/alirezarezvani/claude-skills" target="_blank" style="color:var(--blue); text-decoration:underline;">alirezarezvani/claude-skills</a> 有 192+ 個。</p>
+    <p class="muted" style="margin-bottom:0;">Skill 遵循 <a href="https://agentskills.io" target="_blank" style="color:var(--muted);">Agent Skills</a> 開放標準，同一個 SKILL.md 可跨 Claude Code、Codex、Gemini CLI、Cursor 使用。</p>
+  </div>
+
+  <div class="callout callout-b">
+    <strong>核心概念：</strong>CLAUDE.md 告訴 AI「你是誰」，Skills 告訴 AI「怎麼做」。兩者搭配就是你的個人 AI 工作系統。
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 6: /insights 健檢報告 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-page="5">
+<div class="slide-inner">
+  <h2><span class="tn">05</span><code>/insights</code> 健檢報告</h2>
+  <p>分析你過去 30 天的使用模式，產出互動式 HTML 報告。<br>像一個知識豐富的主管幫你做 code review——但 review 的是你跟 AI 協作的方式。</p>
+
+  <h3>六階段分析流程</h3>
+  <div class="stages">
+    <div class="stage"><div class="stage-n">1</div><div><strong>收集</strong> — 讀取本機 session 日誌，過濾短對話</div></div>
+    <div class="stage-arrow">&#8595;</div>
+    <div class="stage"><div class="stage-n">2</div><div><strong>摘要</strong> — 長對話分塊，提取「要求什麼 / 做了什麼 / 卡在哪」</div></div>
+    <div class="stage-arrow">&#8595;</div>
+    <div class="stage"><div class="stage-n">3</div><div><strong>切面提取</strong> — 辨識深層目標、滿意度、摩擦點</div></div>
+    <div class="stage-arrow">&#8595;</div>
+    <div class="stage"><div class="stage-n">4</div><div><strong>聚合</strong> — 跨 session 找出模式：互動風格、出色工作流、反覆卡點</div></div>
+    <div class="stage-arrow">&#8595;</div>
+    <div class="stage"><div class="stage-n">5</div><div><strong>執行摘要</strong> — 什麼有效 / 什麼阻礙進度 / 快速勝利 / 進階建議</div></div>
+    <div class="stage-arrow">&#8595;</div>
+    <div class="stage"><div class="stage-n">6</div><div><strong>HTML 報告</strong> — 統計數據 + 視覺化圖表 + 可直接用的 CLAUDE.md 建議</div></div>
+  </div>
+
+  <h3>報告會告訴你什麼？</h3>
+  <div class="card" style="font-size:0.95rem;">
+    <p style="margin-bottom:0.3rem;"><strong>任務完成率</strong> — 完全達成 / 部分達成 / 未達成的比例</p>
+    <p style="margin-bottom:0.3rem;"><strong>摩擦點分類</strong> — 誤解需求、產出有 bug、過度修改⋯</p>
+    <p style="margin-bottom:0.3rem;"><strong>互動風格</strong> — 你是給詳細指令還是簡短提示後再修？</p>
+    <p style="margin-bottom:0.3rem;"><strong>自動建議 CLAUDE.md 規則</strong> — 根據你重複的指令自動生成</p>
+    <p style="margin-bottom:0;"><strong>專案分佈 &amp; 工具使用</strong> — 你在哪些專案花最多時間</p>
+  </div>
+
+  <h3>怎麼跑？報告在哪？</h3>
+  <div class="step-card"><div class="sn">1</div><div class="sc">
+    <p>在 Claude Code 輸入 <code>/insights</code>，等幾分鐘（會分析 30 天內的 session）</p>
+  </div></div>
+  <div class="step-card"><div class="sn">2</div><div class="sc">
+    <p>跑完後自動產出互動式 HTML 報告並用瀏覽器開啟</p>
+  </div></div>
+  <div class="step-card"><div class="sn">3</div><div class="sc">
+    <p>報告存在本機：<code>~/.claude/usage-data/report.html</code><br>
+    <span class="muted">完全本地運算，不上傳任何資料。隨時可回去打開這個檔案回顧。</span></p>
+  </div></div>
+
+  <div class="callout callout-g">
+    <strong>建議每月跑一次。</strong>快取機制讓重複執行只分析新 session，追蹤自己跟 AI 協作的成長軌跡。
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 7: 2026 新功能速覽 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="slide" data-page="6">
+<div class="slide-inner">
+  <h2><span class="tn">06</span>先練這三招就夠了</h2>
+  <p>不用一次學完所有功能。這三個覆蓋 PM 八成的日常需求，其他的用到再學。</p>
+
+  <div class="layer-stack" style="margin:1.2rem 0;">
+    <div class="layer layer-1">
+      <div class="layer-icon" style="font-size:1.5rem;">1</div>
+      <div><strong>CLAUDE.md</strong> — 寫下你的偏好和規則，AI 每次都記得<br><span class="muted">先貼範例，踩坑就補一條</span></div>
+    </div>
+    <div class="layer layer-2">
+      <div class="layer-icon" style="font-size:1.5rem;">2</div>
+      <div><strong>好的 Prompt</strong> — 給 context 比給指令重要<br><span class="muted">用 <code>@file</code> 丟檔案、先要三方案再挑一個</span></div>
+    </div>
+    <div class="layer layer-3">
+      <div class="layer-icon" style="font-size:1.5rem;">3</div>
+      <div><strong><code>/plan</code></strong> — 先規劃再執行<br><span class="muted">讓 AI 列計畫給你看，你同意了才動手</span></div>
+    </div>
+  </div>
+
+  <h3>2026 新功能速覽</h3>
+  <table class="ftable">
+    <thead>
+      <tr><th>功能</th><th>說明</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="ft-name">Voice Mode<br><span class="ft-code">/voice</span></td>
+        <td>按住空白鍵說話，放開送出。支援 20 種語言，不是「永遠在聽」的侵入式設計。用嘴巴跟 AI 協作。</td>
+      </tr>
+      <tr>
+        <td class="ft-name">/loop<br><span class="ft-code">/loop 5m ...</span></td>
+        <td>定時重複執行指令。像輕量 cron job：<code>/loop 5m check the deploy</code> 每 5 分鐘幫你看一次部署狀態。</td>
+      </tr>
+      <tr>
+        <td class="ft-name">1M Context</td>
+        <td>Opus 4.6 支援 100 萬 token 上下文窗口，可以一次丟進整個專案的程式碼。從 200K 直接跳到 1M。</td>
+      </tr>
+      <tr>
+        <td class="ft-name">MCP Servers</td>
+        <td>串接外部服務：Jira、Linear、Notion、Slack、PostHog、Amplitude⋯⋯不需要自己寫 API 串接。</td>
+      </tr>
+      <tr>
+        <td class="ft-name">Hooks</td>
+        <td>工具執行前後自動觸發行為。支援 HTTP hooks，可串接外部服務。例如：每次 commit 前自動跑 lint。</td>
+      </tr>
+      <tr>
+        <td class="ft-name">Computer Use</td>
+        <td>AI 直接操作你的桌面：移動滑鼠、點按鈕、開瀏覽器。搭配 Remote Control 可以用手機遙控電腦上的 AI。</td>
+      </tr>
+      <tr>
+        <td class="ft-name">Scheduled Tasks</td>
+        <td>設定排程任務，定時自動執行。像是每天早上 9 點自動整理昨天的 PR 摘要。</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- NAV BAR -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn">&larr; 上一頁</button>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="nav-dots" id="dots"></div>
+    <span class="page-num" id="pn"></span>
+  </div>
+  <button class="nav-btn" id="nextBtn">下一頁 &rarr;</button>
+</div>
+
+<script>
+  let cur = 0;
+  const sl = document.querySelectorAll('.slide');
+  const tot = sl.length;
+  const dots = document.getElementById('dots');
+
+  for (let i = 0; i < tot; i++) {
+    const d = document.createElement('button');
+    d.className = 'nav-dot';
+    d.addEventListener('click', () => goTo(i));
+    dots.appendChild(d);
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => go(-1));
+  document.getElementById('nextBtn').addEventListener('click', () => go(1));
+
+  function goTo(i) {
+    sl[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, tot - 1));
+    sl[cur].classList.add('active');
+    upd();
+  }
+  function go(d) { goTo(cur + d); }
+  function upd() {
+    document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+    document.getElementById('pn').textContent = (cur + 1) + ' / ' + tot;
+    document.getElementById('prevBtn').disabled = cur === 0;
+    document.getElementById('nextBtn').disabled = cur === tot - 1;
+  }
+  upd();
+
+  document.addEventListener('keydown', e => {
+    if (e.target.isContentEditable) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  });
+
+  /* ── Skill tooltip toggle ── */
+  function toggleTip(el) {
+    const wasActive = el.classList.contains('active');
+    document.querySelectorAll('.flow-s.on.active').forEach(e => e.classList.remove('active'));
+    if (!wasActive) el.classList.add('active');
+  }
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.flow-s.on')) {
+      document.querySelectorAll('.flow-s.on.active').forEach(el => el.classList.remove('active'));
+    }
+  });
+</script>
+</body>
+</html>
