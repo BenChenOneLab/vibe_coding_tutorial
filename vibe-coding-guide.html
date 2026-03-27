@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vibe Coding 實戰指南</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf8;
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --accent: #e85d2a;
+    --accent-soft: #fff0eb;
+    --border: #e0ddd8;
+    --card: #ffffff;
+    --code-bg: #1e1e1e;
+    --code-text: #d4d4d4;
+    --green: #2d8a56;
+    --yellow: #f59e0b;
+    --grid-hover: #fef3c7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 19px;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ── SLIDE SYSTEM ── */
+  .slide {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    padding: 2rem 2rem 4.5rem;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; }
+  .slide-inner {
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ── NAV BAR ── */
+  .nav-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(250,250,248,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 0.6rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-dots { display: flex; gap: 6px; align-items: center; }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); border: none; cursor: pointer;
+    transition: all 0.25s; padding: 0;
+  }
+  .nav-dot.active { background: var(--accent); width: 22px; border-radius: 4px; }
+  .nav-btn {
+    background: none; border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 0.35rem 1rem; font-family: inherit; font-size: 0.82rem;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn:disabled:hover { border-color: var(--border); color: var(--muted); }
+  .page-num { font-size: 0.75rem; color: var(--muted); min-width: 40px; text-align: center; }
+
+  /* ── TYPOGRAPHY ── */
+  h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1.3; margin-bottom: 1rem; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 1rem; }
+  h2 .tn {
+    font-size: 0.8rem; font-weight: 500; color: var(--accent);
+    border: 1.5px solid var(--accent); border-radius: 4px;
+    padding: 0.1em 0.5em; margin-right: 0.5em;
+    vertical-align: middle; position: relative; top: -1px;
+  }
+  h3 { font-size: 1.15rem; font-weight: 700; margin: 1.4rem 0 0.5rem; }
+  p { margin-bottom: 0.8rem; }
+  .muted { color: var(--muted); font-size: 1rem; }
+  .subtitle { font-size: 1.2rem; color: var(--muted); font-weight: 300; margin-bottom: 1.5rem; }
+  code {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.83em;
+    background: #f0eeea; padding: 0.12em 0.4em; border-radius: 4px;
+  }
+
+  /* ── COMPONENTS ── */
+  .callout {
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem; border-radius: 0 8px 8px 0;
+    margin: 1rem 0; font-size: 1rem;
+  }
+  .callout strong { color: var(--accent); }
+  .callout-g { background: #ecfdf5; border-left-color: var(--green); }
+  .callout-g strong { color: var(--green); }
+
+  .step-card { display: flex; gap: 0.8rem; align-items: flex-start; margin: 0.8rem 0; }
+  .sn {
+    flex-shrink: 0; width: 30px; height: 30px;
+    background: var(--accent); color: #fff; font-size: 0.88rem; font-weight: 700;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+  .sc { flex: 1; }
+  .sc p:last-child { margin-bottom: 0; }
+
+  .flow {
+    display: flex; align-items: center; gap: 0; margin: 1.2rem 0;
+    justify-content: center; flex-wrap: wrap;
+  }
+  .flow-s {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 0.55rem 0.9rem; font-size: 0.95rem; font-weight: 500; text-align: center;
+  }
+  .flow-a { color: var(--muted); font-size: 1.1rem; padding: 0 0.2rem; }
+  .flow-s.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+  .prompt-box {
+    background: #fffbeb; border: 1.5px solid #fbbf24; border-radius: 8px;
+    padding: 1rem 1.2rem; margin: 0.8rem 0; font-size: 1rem; line-height: 1.8;
+  }
+  .pl { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--yellow); margin-bottom: 0.4rem; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.4rem; margin: 0.8rem 0; }
+
+  /* ── COPY ── */
+  .cw { position: relative; }
+  .cb {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: #aaa; font-size: 0.82rem; padding: 0.3rem 0.7rem; border-radius: 4px;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .cb:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .cb.ok { color: #4ade80; border-color: #4ade80; }
+
+  .rb {
+    background: var(--code-bg); color: var(--code-text); border-radius: 8px;
+    padding: 1.2rem 1.4rem; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem; line-height: 1.85; white-space: pre-wrap;
+    word-break: break-word; overflow-y: auto; max-height: 58vh; margin: 0.8rem 0;
+  }
+
+  /* ── 9-GRID ── */
+  .g9 {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+    margin: 1rem 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+  }
+  .gc {
+    background: var(--card); padding: 0.8rem; min-height: 80px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; transition: background 0.2s;
+  }
+  .gc:hover { background: var(--grid-hover); }
+  .gc.ctr { background: var(--accent); color: #fff; font-weight: 700; }
+  .gc.ctr:hover { background: #d14e1f; }
+  .gc .t { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .gc .h { font-size: 0.82rem; opacity: 0.6; }
+  .ge .gc { cursor: text; }
+  .ge .gc[contenteditable]:focus { background: var(--grid-hover); box-shadow: inset 0 0 0 2px var(--accent); outline: none; }
+
+  /* ── SOLUTION CARDS ── */
+  .sol { background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 0.6rem 0; transition: border-color 0.2s; }
+  .sol:hover { border-color: var(--accent); }
+  .sol-l { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+  .sol p { font-size: 1rem; margin-bottom: 0; }
+
+  /* ── FAQ ── */
+  .fi { border-bottom: 1px solid var(--border); padding: 0.9rem 0; }
+  .fi:last-child { border-bottom: none; }
+  .fq {
+    font-weight: 700; font-size: 1.05rem; margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .fq::before {
+    content: 'Q'; font-size: 0.72rem; font-weight: 700; color: #fff;
+    background: var(--accent); width: 20px; height: 20px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .fa { font-size: 1rem; color: var(--muted); padding-left: 1.8rem; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.9rem; }
+    .slide { padding: 1.5rem 1.2rem 4.5rem; }
+    .gc { min-height: 65px; padding: 0.6rem 0.4rem; }
+    .rb { font-size: 0.8rem; max-height: 48vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: AI 到底可以做什麼 -->
+<div class="slide active" data-page="1">
+<div class="slide-inner">
+  <h1><span>AI 到底可以做什麼？</span></h1>
+  <p>AI 能做的事非常多——但它不知道<strong>你</strong>需要什麼。</p>
+  <p>它不會主動來找你。你要先告訴它你的問題，它才能幫你。<br>想像一下這些日常工作場景：</p>
+
+  <div class="sol" style="margin-top:1.2rem;">
+    <div class="sol-l">情境 1 — 新球種上線</div>
+    <p>每次新增一個球種或玩法，規格文件要從零寫起。光是列出結算條件、異常處理、延賽規則就半天，還不算跟 RD 來回確認。</p>
+  </div>
+  <div class="sol">
+    <div class="sol-l">情境 2 — UAT 測試案例</div>
+    <p>規格寫完了，接著要手動展開幾十條測試案例：正常結算、延賽、腰斬、跨日、特殊比分⋯⋯每次都怕漏掉邊界情況。</p>
+  </div>
+  <div class="sol">
+    <div class="sol-l">情境 3 — 競品功能比較</div>
+    <p>老闆丟來一句「XX 平台上了一個新功能，我們要不要做？」你得花兩小時去截圖、整理、比較差異，最後簡報還是被打槍。</p>
+  </div>
+
+  <div class="callout" style="margin-top:1.5rem;">
+    <strong>這些事有一個共通點：</strong>你花了大量時間在「流程」上，而不是在「思考」上。AI 就是來幫你處理這些流程的。
+  </div>
+</div>
+</div>
+
+<!-- PAGE 2: 拆解問題 -->
+<div class="slide" data-page="2">
+<div class="slide-inner">
+  <h2><span class="tn">01</span>把問題拆解開來</h2>
+  <p>知道痛在哪之後，下一步是<strong>拆開它</strong>。</p>
+  <p class="muted">用「曼陀羅九宮格」：中心放核心問題，周圍八格放你聯想到的面向。</p>
+
+  <h3>範例：體育博弈產品團隊</h3>
+  <div class="g9">
+    <div class="gc"><div class="t">規格反覆修改</div><div class="h">→ 規格模板</div></div>
+    <div class="gc"><div class="t">結算規則漏寫</div><div class="h">→ 自動檢查表</div></div>
+    <div class="gc"><div class="t">多球種規則混淆</div><div class="h">→ 規則速查工具</div></div>
+    <div class="gc"><div class="t">測試案例寫不完</div><div class="h">→ 案例產生器</div></div>
+    <div class="gc ctr"><div class="t">產品團隊</div><div class="h">被要求提高交付效率</div></div>
+    <div class="gc"><div class="t">跨部門需求不同步</div><div class="h">→ 需求看板</div></div>
+    <div class="gc"><div class="t">歷史規格查不到</div><div class="h">→ 規格知識庫</div></div>
+    <div class="gc"><div class="t">上線時程被壓縮</div><div class="h">→ 排程計算器</div></div>
+    <div class="gc"><div class="t">新人接手要重學</div><div class="h">→ Onboarding 指南</div></div>
+  </div>
+
+  <div class="callout">
+    <strong>重點：</strong>不用一次解決全部。挑一個最痛的，先做出來、先用起來。
+  </div>
+</div>
+</div>
+
+<!-- PAGE 3: 從九宮格到 Prompt -->
+<div class="slide" data-page="3">
+<div class="slide-inner">
+  <h2><span class="tn">02</span>從痛點到 Prompt</h2>
+
+  <h3>轉換公式</h3>
+  <div class="card">
+    <p style="margin:0;">我是 <code>[你的身份]</code>，我的問題是 <code>[中心格]</code>。<br>我需要一個工具來解決 <code>[某個面向]</code>，幫我舉出三個方案，跟我討論。</p>
+  </div>
+
+  <h3>範例 Prompt</h3>
+  <div class="prompt-box">
+    <div class="pl">直接貼這段試試</div>
+    我是體育博弈產品的 PO，每次新球種上線都要從零寫規格，光列結算條件就半天。<br>我需要一個工具來加速規格文件的產出，幫我舉出三個方案，跟我討論。
+  </div>
+
+  <h3>AI 可能回你的三個方案</h3>
+  <div class="sol">
+    <div class="sol-l">方案 A — 極簡版</div>
+    <p>一頁式 Checklist 網頁，選球種後自動帶出該球種的必填項目（結算條件、延賽處理、腰斬規則⋯），逐項勾選確認，缺漏標紅。像 Google 表單但會自動幫你抓漏。<strong>10 分鐘做完。</strong></p>
+  </div>
+  <div class="sol">
+    <div class="sol-l">方案 B — 進階版</div>
+    <p>加上規格模板引擎：選球種＋玩法類型，自動產出八成完成的規格草稿，你只要補細節。像填空題而不是作文題。</p>
+  </div>
+  <div class="sol">
+    <div class="sol-l">方案 C — 完整版</div>
+    <p>整合歷史規格庫，貼入新規格後自動比對同類玩法的過往版本，標記差異與潛在衝突。像 Git diff 但是給規格文件用的。</p>
+  </div>
+
+  <div class="callout">
+    <strong>永遠從 A 開始。</strong>做完能用了，再慢慢加功能變成 B、C。這就是迭代。
+  </div>
+</div>
+</div>
+
+<!-- PAGE 4: 安裝 Anti-Gravity -->
+<div class="slide" data-page="4">
+<div class="slide-inner">
+  <h2><span class="tn">03</span>安裝 Anti-Gravity</h2>
+  <p class="muted">Google 出品的 AI 開發平台，免費、跨平台、內建多個 AI 模型。</p>
+
+  <div class="step-card"><div class="sn">1</div><div class="sc"><p>前往 <a href="https://antigravity.google/" target="_blank" style="color:var(--accent);font-weight:500;">antigravity.google</a>，下載對應你作業系統的版本（Windows / macOS / Linux），安裝後開啟</p></div></div>
+  <div class="step-card"><div class="sn">2</div><div class="sc"><p>用 Google 帳號登入，免費版就有足夠的額度可以用</p></div></div>
+  <div class="step-card"><div class="sn">3</div><div class="sc"><p>開一個資料夾，在 Agent 對話框輸入你的第一個需求：</p></div></div>
+
+  <div class="prompt-box">
+    <div class="pl">你的第一個 Prompt</div>
+    幫我做一個倒數計時器網頁，可以輸入秒數，按開始就會倒數，時間到會發出聲音。用 HTML 寫，要好看。
+  </div>
+
+  <div class="callout callout-g">
+    <strong>內建 Gemini 3 Pro、Claude Sonnet、GPT 模型。</strong>你不需要另外申請 API key，裝好就能用。
+  </div>
+</div>
+</div>
+
+<!-- PAGE 5: 設定準則 -->
+<div class="slide" data-page="5">
+<div class="slide-inner">
+  <h2><span class="tn">04</span>設定準則</h2>
+  <p>開新對話時，先貼這段讓 AI 知道你的習慣。<strong>按右上角「複製」整段帶走。</strong></p>
+  <p class="muted">這是進階版（英文），下方有每條的中文白話翻譯。</p>
+
+  <div class="cw">
+    <button class="cb" id="cpBtn">複製</button>
+    <div class="rb" id="rulesBlock">DO NOT GIVE ME HIGH LEVEL SHIT, IF I ASK FOR FIX OR EXPLANATION, I WANT ACTUAL CODE OR EXPLANATION!!! I DON'T WANT "Here's how you can blablabla"
+- Always respond in 繁體中文
+- Be casual unless otherwise specified
+- Be terse
+- Suggest solutions that I didn't think about—anticipate my needs
+- Treat me as an expert
+- Be accurate and thorough
+- Give the answer immediately. Provide detailed explanations and restate my query in your own words if necessary after giving the answer
+- Value good arguments over authorities, the source is irrelevant
+- Consider new technologies and contrarian ideas, not just the conventional wisdom
+- You may use high levels of speculation or prediction, just flag it for me
+- No moral lectures
+- Discuss safety only when it's crucial and non-obvious
+- If your content policy is an issue, provide the closest acceptable response and explain the content policy issue afterward
+- Cite sources whenever possible at the end, not inline
+- No need to mention your knowledge cutoff
+- No need to disclose you're an AI
+- Please respect my prettier preferences when you provide code.
+- Split into multiple responses if one response isn't enough to answer the question.
+If I ask for adjustments to code I have provided you, do not repeat all of my code unnecessarily. Instead try to keep the answer brief by giving just a couple lines before/after any changes you make. Multiple code blocks are ok.</div>
+  </div>
+
+  <h3>每條在幹嘛？（白話翻譯）</h3>
+  <div class="card" style="font-size:0.88rem; line-height:2.1;">
+    <p style="margin-bottom:0.3rem;"><strong>第一行</strong> — 不要給我高層次的廢話。我問修正或解釋，就給我實際的程式碼或實際的解釋，不要「你可以這樣做⋯」的敷衍口吻</p>
+    <p style="margin-bottom:0.3rem;"><strong>Always respond in 繁體中文</strong> — 回覆一律用繁體中文</p>
+    <p style="margin-bottom:0.3rem;"><strong>Be casual</strong> — 語氣輕鬆，除非我另外要求正式</p>
+    <p style="margin-bottom:0.3rem;"><strong>Be terse</strong> — 回覆精簡，不要囉唆</p>
+    <p style="margin-bottom:0.3rem;"><strong>Suggest solutions…</strong> — 主動提出我沒想到的解法，預判我的需求</p>
+    <p style="margin-bottom:0.3rem;"><strong>Treat me as an expert</strong> — 把我當內行人，不用從基礎教起</p>
+    <p style="margin-bottom:0.3rem;"><strong>Be accurate and thorough</strong> — 回答要準確且完整</p>
+    <p style="margin-bottom:0.3rem;"><strong>Give the answer immediately…</strong> — 先給答案，必要時再補充詳細解釋或用你的話重述我的問題</p>
+    <p style="margin-bottom:0.3rem;"><strong>Value good arguments…</strong> — 重視論點品質，不用管來源權威不權威</p>
+    <p style="margin-bottom:0.3rem;"><strong>Consider new technologies…</strong> — 考慮新技術和非主流觀點，不要只給保守建議</p>
+    <p style="margin-bottom:0.3rem;"><strong>High levels of speculation…</strong> — 可以大膽推測，但要標註哪些是推測</p>
+    <p style="margin-bottom:0.3rem;"><strong>No moral lectures</strong> — 不要說教</p>
+    <p style="margin-bottom:0.3rem;"><strong>Discuss safety only…</strong> — 只在安全問題關鍵且不明顯時才提</p>
+    <p style="margin-bottom:0.3rem;"><strong>Content policy…</strong> — 如果受到內容政策限制，給我最接近的可用回覆，再說明限制原因</p>
+    <p style="margin-bottom:0.3rem;"><strong>Cite sources…</strong> — 盡量附來源，放在最後面，不要穿插在文中</p>
+    <p style="margin-bottom:0.3rem;"><strong>No need to mention…</strong> — 不用提你的知識截止日期，也不用聲明你是 AI</p>
+    <p style="margin-bottom:0.3rem;"><strong>Respect my prettier…</strong> — 給程式碼時請遵守我的排版偏好</p>
+    <p style="margin-bottom:0.3rem;"><strong>Split into multiple…</strong> — 一次回覆講不完就拆成多次回</p>
+    <p style="margin-bottom:0;"><strong>最後一段</strong> — 我貼程式碼請你改時，不要重複貼我的完整程式碼，只給改動的前後幾行就好，可以用多個程式碼區塊</p>
+  </div>
+</div>
+</div>
+
+<!-- PAGE 6: 你想解決什麼問題 -->
+<div class="slide" data-page="6">
+<div class="slide-inner">
+  <h2><span class="tn">05</span>換你了：你想解決什麼問題？</h2>
+  <p>中間填你最想解決的問題，周圍八格是思考方向——幫你從不同面向挖掘可能性。</p>
+
+  <div class="g9 ge" id="myGrid">
+    <div class="gc" contenteditable="true" data-ph="哪件事最花你時間？"></div>
+    <div class="gc" contenteditable="true" data-ph="有哪些重複的手工作業？"></div>
+    <div class="gc" contenteditable="true" data-ph="資訊散落在哪些地方？"></div>
+    <div class="gc" contenteditable="true" data-ph="哪個環節最常跟 RD 來回？"></div>
+    <div class="gc ctr" contenteditable="true" data-ph="你的問題是什麼？" style="color:#fff;"></div>
+    <div class="gc" contenteditable="true" data-ph="有沒有每次都漏掉的細節？"></div>
+    <div class="gc" contenteditable="true" data-ph="新人接手最卡在哪一步？"></div>
+    <div class="gc" contenteditable="true" data-ph="哪個步驟最容易出錯？"></div>
+    <div class="gc" contenteditable="true" data-ph="如果解決了，最大改變是？"></div>
+  </div>
+
+  <div class="callout">
+    <strong>填完之後，</strong>挑一個周圍格，用下面的轉換公式寫成 Prompt，貼進 Anti-Gravity 試試看。第一版不完美很正常——做就對了。
+  </div>
+
+  <h3>轉換公式</h3>
+  <div class="card">
+    <p style="margin:0;">我是 <code>[你的身份]</code>，我的問題是 <code>[中心格]</code>。<br>我需要一個工具來解決 <code>[某個面向]</code>，幫我舉出三個方案，跟我討論。</p>
+  </div>
+</div>
+</div>
+
+<!-- PAGE 7: FAQ -->
+<div class="slide" data-page="7">
+<div class="slide-inner">
+  <h2><span class="tn">06</span>常見問題與卡關指南</h2>
+
+  <div class="fi">
+    <div class="fq">AI 產出的東西跑不動</div>
+    <div class="fa">把錯誤訊息整段複製貼給 AI，說「這段報錯了，幫我修」。不需要你看懂。反覆修超過 3 次，說「換個做法重寫」。</div>
+  </div>
+  <div class="fi">
+    <div class="fq">不知道怎麼描述我要什麼</div>
+    <div class="fa">想像你在跟朋友說「欸你幫我做一個…」後面那句話，就是你的 Prompt。不確定的部分就說「你決定」，讓 AI 先做一版出來再調。</div>
+  </div>
+  <div class="fi">
+    <div class="fq">AI 回覆太長太囉唆</div>
+    <div class="fa">直接說「太長了，只給我改動的部分」。或在準則裡加：<code>Be terse</code></div>
+  </div>
+  <div class="fi">
+    <div class="fq">對話太長，AI 開始忘記前面的東西</div>
+    <div class="fa">開新對話，把目前程式碼貼過去，加一句「這是目前進度，接下來要加 XX 功能」。</div>
+  </div>
+  <div class="fi">
+    <div class="fq">做出來的東西很醜</div>
+    <div class="fa">給 AI 參考：「參考 <code>[某網站]</code> 的風格重新設計」，或具體說「圓角、大間距、柔和配色」。</div>
+  </div>
+  <div class="fi">
+    <div class="fq">免費額度用完了</div>
+    <div class="fa">把需求想清楚再送出，減少來回。一次把相關修改講完。也可以交替使用其他免費工具。</div>
+  </div>
+  <div class="fi">
+    <div class="fq">想更進階，下一步？</div>
+    <div class="fa">做 5 個小專案後：學基礎 HTML/CSS/JS → 試 Cursor 編輯器 → 學 Git 保存作品 → 部署到 Vercel 讓別人也能用。</div>
+  </div>
+
+  <h3 style="margin-top:2rem;">進階資源：Agent Skills</h3>
+  <div class="card">
+    <p style="margin-bottom:0.5rem;"><a href="https://skills.sh/" target="_blank" style="color:var(--accent);font-weight:700;">skills.sh</a> — 開源的 AI Agent 技能市集</p>
+    <p style="margin-bottom:0.5rem;">Skills 是可以一行指令安裝的「AI 外掛能力包」，裝了之後 Agent 會自動學會對應的最佳實踐。支援 Anti-Gravity、Cursor、Claude Code 等主流工具。</p>
+    <p class="muted" style="margin-bottom:0;">例如裝了 <code>frontend-design</code> skill，AI 做出來的網頁就不會是醜醜的預設樣式，而是有設計感的成品。</p>
+  </div>
+</div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn">← 上一頁</button>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="nav-dots" id="dots"></div>
+    <span class="page-num" id="pn"></span>
+  </div>
+  <button class="nav-btn" id="nextBtn">下一頁 →</button>
+</div>
+
+<script>
+  let cur = 0;
+  const sl = document.querySelectorAll('.slide');
+  const tot = sl.length;
+  const dots = document.getElementById('dots');
+
+  for (let i = 0; i < tot; i++) {
+    const d = document.createElement('button');
+    d.className = 'nav-dot';
+    d.addEventListener('click', () => goTo(i));
+    dots.appendChild(d);
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => go(-1));
+  document.getElementById('nextBtn').addEventListener('click', () => go(1));
+
+  function goTo(i) {
+    sl[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, tot - 1));
+    sl[cur].classList.add('active');
+    upd();
+  }
+  function go(d) { goTo(cur + d); }
+  function upd() {
+    document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+    document.getElementById('pn').textContent = (cur + 1) + ' / ' + tot;
+    document.getElementById('prevBtn').disabled = cur === 0;
+    document.getElementById('nextBtn').disabled = cur === tot - 1;
+  }
+  upd();
+
+  document.addEventListener('keydown', e => {
+    if (e.target.isContentEditable) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  });
+
+  // copy rules
+  document.getElementById('cpBtn').addEventListener('click', function() {
+    const t = document.getElementById('rulesBlock').textContent;
+    const btn = this;
+    navigator.clipboard.writeText(t).then(() => {
+      btn.textContent = '已複製';
+      btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = '複製'; btn.classList.remove('ok'); }, 1500);
+    });
+  });
+
+  // editable grid
+  document.querySelectorAll('.ge .gc').forEach(c => {
+    const ph = c.dataset.ph;
+    if (!c.textContent.trim()) { c.textContent = ph; c.style.opacity = '0.35'; }
+    c.addEventListener('focus', () => {
+      if (c.textContent === ph) { c.textContent = ''; c.style.opacity = '1'; }
+    });
+    c.addEventListener('blur', () => {
+      if (!c.textContent.trim()) { c.textContent = ph; c.style.opacity = '0.35'; }
+      else { c.style.opacity = '1'; }
+    });
+  });
+</script>
+</body>
+</html>
