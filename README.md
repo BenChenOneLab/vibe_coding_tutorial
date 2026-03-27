@@ -1,2 +1,2 @@
-Vibe coding with antigravity: https://benchenonelab.github.io/antigravity_tutorial/vibe-coding-guide.html
-Claude Code Guide: https://benchenonelab.github.io/antigravity_tutorial/claude-code-guide.html
+- Vibe coding with antigravity: https://benchenonelab.github.io/antigravity_tutorial/vibe-coding-guide.html
+- Claude Code Guide: https://benchenonelab.github.io/antigravity_tutorial/claude-code-guide.html
